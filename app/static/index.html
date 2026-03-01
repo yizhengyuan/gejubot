@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GejuBot</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="board-panel">
+        <h1>GejuBot</h1>
+        <p class="subtitle">KataGo powered analysis board</p>
+        <canvas id="board" width="760" height="760" aria-label="go board"></canvas>
+        <div class="toolbar">
+          <button id="analyzeBtn" type="button">Analyze</button>
+          <button id="exportSgfBtn" type="button">Export SGF</button>
+          <button id="importSgfBtn" type="button">Import SGF</button>
+          <button id="toStartBtn" type="button">|&lt;</button>
+          <button id="back5Btn" type="button">-5</button>
+          <button id="prevBtn" type="button">&lt;</button>
+          <button id="nextBtn" type="button">&gt;</button>
+          <button id="forward5Btn" type="button">+5</button>
+          <button id="toEndBtn" type="button">&gt;|</button>
+          <button id="passBtn" type="button">Pass</button>
+          <button id="undoBtn" type="button">Undo</button>
+          <button id="resetBtn" type="button">Reset</button>
+          <label class="visits">
+            Move Labels
+            <select id="moveLabelMode">
+              <option value="all">All</option>
+              <option value="last5">Last 5</option>
+              <option value="current">Current</option>
+              <option value="lastMarker">Last Marker</option>
+            </select>
+          </label>
+          <label class="visits">
+            Max Visits
+            <input id="visitsInput" type="number" value="120" min="1" max="10000" />
+          </label>
+          <label class="visits">
+            Top N
+            <input id="topNInput" type="number" value="10" min="1" max="400" />
+          </label>
+          <label class="visits">
+            Board Overlay
+            <select id="boardOverlayMode">
+              <option value="off">Off</option>
+              <option value="allHeatmap">All Points Heatmap</option>
+            </select>
+          </label>
+          <label class="visits">
+            List Scope
+            <select id="listScopeMode">
+              <option value="topN">Top N</option>
+              <option value="all">All Candidates</option>
+            </select>
+          </label>
+          <input id="sgfInput" type="file" accept=".sgf" hidden />
+        </div>
+      </section>
+
+      <aside class="info-panel">
+        <h2>Position</h2>
+        <p id="status">Turn: Black</p>
+        <p id="summary">No analysis yet.</p>
+        <section id="heatLegend" class="heat-legend" hidden>
+          <h3>Heatmap Legend</h3>
+          <p id="heatLegendHint">Relative winrate scale for current position</p>
+          <div class="legend-bar" aria-hidden="true"></div>
+          <div class="legend-scale">
+            <span id="heatLegendMin">-</span>
+            <span id="heatLegendMid">-</span>
+            <span id="heatLegendMax">-</span>
+          </div>
+          <div class="legend-notes">
+            <span>Lower</span>
+            <span>Higher</span>
+          </div>
+        </section>
+
+        <h2>Top Variations</h2>
+        <ol id="movesList"></ol>
+      </aside>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
