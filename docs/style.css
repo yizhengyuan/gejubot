@@ -106,6 +106,35 @@ select {
   color: #5f4f24;
 }
 
+.backend-status {
+  margin: 0.15rem 0 0.45rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #4b3f1f;
+  font-size: 0.95rem;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15) inset;
+}
+
+.status-online {
+  background: #1b9c4b;
+}
+
+.status-offline {
+  background: #b84a3f;
+}
+
+.status-checking {
+  background: #c28d2c;
+}
+
 .heat-legend {
   margin: 0.7rem 0 1rem 0;
   padding: 0.65rem 0.7rem 0.75rem 0.7rem;

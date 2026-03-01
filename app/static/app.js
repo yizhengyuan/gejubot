@@ -26,6 +26,8 @@ const heatLegendHintEl = document.getElementById("heatLegendHint");
 const heatLegendMinEl = document.getElementById("heatLegendMin");
 const heatLegendMidEl = document.getElementById("heatLegendMid");
 const heatLegendMaxEl = document.getElementById("heatLegendMax");
+const backendStatusDotEl = document.getElementById("backendStatusDot");
+const backendStatusTextEl = document.getElementById("backendStatusText");
 
 const ctx = boardCanvas.getContext("2d");
 const defaultRules = "chinese";
@@ -65,6 +67,53 @@ const apiBase = (window.GEJUBOT_API_BASE || "").trim().replace(/\/+$/, "");
 
 function apiUrl(path) {
   return apiBase ? `${apiBase}${path}` : path;
+}
+
+function setBackendStatus(mode, text) {
+  if (backendStatusDotEl) {
+    backendStatusDotEl.classList.remove("status-online", "status-offline", "status-checking");
+    if (mode === "online") {
+      backendStatusDotEl.classList.add("status-online");
+    } else if (mode === "offline") {
+      backendStatusDotEl.classList.add("status-offline");
+    } else {
+      backendStatusDotEl.classList.add("status-checking");
+    }
+  }
+  if (backendStatusTextEl) {
+    backendStatusTextEl.textContent = text;
+  }
+}
+
+async function checkBackendHealth() {
+  if (window.location.hostname.endsWith("github.io") && !apiBase) {
+    setBackendStatus("offline", "未配置 API（静态模式）");
+    return;
+  }
+  setBackendStatus("checking", "检查中...");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3500);
+  try {
+    const resp = await fetch(apiUrl("/api/health"), {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      setBackendStatus("offline", `离线（HTTP ${resp.status}）`);
+      return;
+    }
+    const data = await resp.json().catch(() => ({}));
+    if (data && data.ok) {
+      setBackendStatus("online", "在线");
+    } else {
+      setBackendStatus("offline", "离线（健康检查失败）");
+    }
+  } catch (err) {
+    setBackendStatus("offline", "离线（连接失败）");
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function postAnalyze(payload) {
@@ -1277,6 +1326,8 @@ resetBtn.addEventListener("click", () => {
 syncTopNInputDefault(true);
 updateStatus();
 drawBoard();
+checkBackendHealth();
+setInterval(checkBackendHealth, 15000);
 if (window.location.hostname.endsWith("github.io") && !apiBase) {
   summaryEl.textContent =
     "当前为 GitHub Pages 静态模式：可用棋盘与 SGF 功能。设置 GEJUBOT_API_BASE 可启用“分析”。";
