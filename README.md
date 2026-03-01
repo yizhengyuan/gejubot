@@ -63,6 +63,7 @@ This repo includes a static site under `docs/` for GitHub Pages.
 
 - Works on Pages: board interaction, rules, SGF import/export, move browsing.
 - Not available on Pages by default: KataGo `Analyze` (needs external backend API).
+- Fallback: repository root `index.html` redirects to `docs/`, so `main/(root)` Pages setup still lands on the site.
 
 ### Enable Analyze on Pages
 
