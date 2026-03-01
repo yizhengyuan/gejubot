@@ -79,9 +79,9 @@ async function postAnalyze(payload) {
     data = text ? JSON.parse(text) : {};
   } catch (err) {
     if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: backend returned non-JSON response`);
+      throw new Error(`HTTP ${resp.status}: 后端返回了非 JSON 响应`);
     }
-    throw new Error("backend returned invalid JSON");
+    throw new Error("后端返回了无效 JSON");
   }
   if (!resp.ok) {
     throw new Error((data && data.error) || `HTTP ${resp.status}`);
@@ -201,15 +201,15 @@ function sgfToGtp(coord) {
 function parseSgfMoves(text) {
   const normalized = text.replace(/^\uFEFF/, "").trim();
   if (!normalized) {
-    throw new Error("Empty SGF file.");
+    throw new Error("SGF 文件为空。");
   }
   const variationCount = (normalized.match(/\(\s*;/g) || []).length;
   if (variationCount > 1) {
-    throw new Error("Only single-variation SGF is supported for now.");
+    throw new Error("当前仅支持单分支 SGF。");
   }
   const sizeMatch = normalized.match(/SZ\[(\d+)\]/i);
   if (sizeMatch && Number(sizeMatch[1]) !== boardSize) {
-    throw new Error(`Only SZ[${boardSize}] is supported.`);
+    throw new Error(`仅支持 SZ[${boardSize}] 棋盘。`);
   }
 
   const result = [];
@@ -224,7 +224,7 @@ function parseSgfMoves(text) {
       .toLowerCase();
     const gtp = sgfToGtp(rawCoord);
     if (gtp === null) {
-      throw new Error(`Invalid SGF coordinate: ${rawCoord || "(empty)"}`);
+      throw new Error(`无效的 SGF 坐标：${rawCoord || "（空）"}`);
     }
     result.push([player, gtp]);
   }
@@ -247,7 +247,7 @@ function buildSgfText() {
 
 function downloadSgf() {
   if (!state.recordMoves.length) {
-    summaryEl.textContent = "No moves to export.";
+    summaryEl.textContent = "没有可导出的棋谱。";
     return;
   }
   const sgf = buildSgfText();
@@ -260,13 +260,13 @@ function downloadSgf() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  summaryEl.textContent = `SGF exported. Moves: ${state.recordMoves.length}`;
+  summaryEl.textContent = `SGF 导出完成。手数：${state.recordMoves.length}`;
 }
 
 function importSgfMoves(moves) {
   reset();
   if (!moves.length) {
-    summaryEl.textContent = "Imported SGF with 0 moves.";
+    summaryEl.textContent = "已导入 SGF（0 手）。";
     return;
   }
 
@@ -277,7 +277,7 @@ function importSgfMoves(moves) {
     const [player, move] = moves[i];
     if (player !== state.nextPlayer) {
       reset();
-      summaryEl.textContent = `Import failed at move ${i + 1}: turn order mismatch.`;
+      summaryEl.textContent = `导入失败（第 ${i + 1} 手）：行棋顺序不匹配。`;
       return;
     }
 
@@ -288,7 +288,7 @@ function importSgfMoves(moves) {
       const p = gtpToPoint(move);
       if (!p) {
         reset();
-        summaryEl.textContent = `Import failed at move ${i + 1}: invalid coordinate ${move}.`;
+        summaryEl.textContent = `导入失败（第 ${i + 1} 手）：无效坐标 ${move}。`;
         return;
       }
       ok = playMoveAt(p.x, p.y);
@@ -296,13 +296,13 @@ function importSgfMoves(moves) {
     if (!ok) {
       const reason = summaryEl.textContent;
       reset();
-      summaryEl.textContent = `Import failed at move ${i + 1}: ${reason}`;
+      summaryEl.textContent = `导入失败（第 ${i + 1} 手）：${reason}`;
       return;
     }
   }
 
   clearAnalysis();
-  summaryEl.textContent = `Imported SGF successfully. Moves: ${moves.length}`;
+  summaryEl.textContent = `SGF 导入成功。手数：${moves.length}`;
 }
 
 async function importSgfFile(file) {
@@ -311,7 +311,7 @@ async function importSgfFile(file) {
     const moves = parseSgfMoves(text);
     importSgfMoves(moves);
   } catch (err) {
-    summaryEl.textContent = `Import failed: ${err.message}`;
+    summaryEl.textContent = `导入失败：${err.message}`;
   }
 }
 
@@ -354,13 +354,13 @@ function removeStones(board, stones) {
 
 function simulateMove(board, x, y, player, koPoint) {
   if (!isOnBoard(x, y)) {
-    return { ok: false, error: "Out of board." };
+    return { ok: false, error: "落点超出棋盘范围。" };
   }
   if (board[y][x] !== null) {
-    return { ok: false, error: "Intersection is occupied." };
+    return { ok: false, error: "该点已有棋子。" };
   }
   if (koPoint && koPoint.x === x && koPoint.y === y) {
-    return { ok: false, error: "Illegal ko recapture." };
+    return { ok: false, error: "非法打劫还原。" };
   }
 
   const working = cloneBoard(board);
@@ -388,7 +388,7 @@ function simulateMove(board, x, y, player, koPoint) {
 
   const ownGroup = getGroupAndLiberties(working, x, y);
   if (ownGroup.liberties.size === 0) {
-    return { ok: false, error: "Suicide is not allowed." };
+    return { ok: false, error: "不允许自杀。" };
   }
 
   let nextKoPoint = null;
@@ -421,7 +421,7 @@ function computeStateFromMoves(moves) {
   for (let i = 0; i < moves.length; i += 1) {
     const [player, move] = moves[i];
     if (player !== nextPlayer) {
-      return { ok: false, error: `Turn mismatch at move ${i + 1}.` };
+      return { ok: false, error: `第 ${i + 1} 手行棋方不匹配。` };
     }
 
     if (move === "pass") {
@@ -436,11 +436,11 @@ function computeStateFromMoves(moves) {
 
     const p = gtpToPoint(move);
     if (!p) {
-      return { ok: false, error: `Invalid move at ${i + 1}: ${move}` };
+      return { ok: false, error: `第 ${i + 1} 手坐标无效：${move}` };
     }
     const result = simulateMove(board, p.x, p.y, player, koPoint);
     if (!result.ok) {
-      return { ok: false, error: `Illegal move at ${i + 1}: ${result.error}` };
+      return { ok: false, error: `第 ${i + 1} 手非法：${result.error}` };
     }
 
     board = result.board;
@@ -513,7 +513,7 @@ function clearAnalysis() {
   state.candidateCount = 0;
   state.lastRootInfo = {};
   state.heatmapStats = null;
-  summaryEl.textContent = "No analysis yet.";
+  summaryEl.textContent = "尚未分析。";
   movesList.innerHTML = "";
 }
 
@@ -578,16 +578,16 @@ function syncTopNInputDefault(force = false) {
 
 function updateStatus() {
   syncTopNInputDefault();
-  const turn = state.nextPlayer === "B" ? "Black" : "White";
-  const ko = state.koPoint ? ` | Ko: ${pointToGtp(state.koPoint.x, state.koPoint.y)}` : "";
-  const view = ` | View: ${state.moves.length}/${state.recordMoves.length}`;
+  const turn = state.nextPlayer === "B" ? "黑" : "白";
+  const ko = state.koPoint ? ` | 劫点：${pointToGtp(state.koPoint.x, state.koPoint.y)}` : "";
+  const view = ` | 视图：${state.moves.length}/${state.recordMoves.length}`;
   let last = "";
   if (state.moves.length > 0) {
     const m = state.moves[state.moves.length - 1];
-    last = ` | Last: ${m[0]}-${m[1]}`;
+    last = ` | 上一手：${m[0]}-${m[1]}`;
   }
   statusEl.textContent =
-    `Turn: ${turn} | Moves: ${state.moves.length} | Captures B:${state.captures.B} W:${state.captures.W}${view}${last}${ko}`;
+    `轮到：${turn} | 手数：${state.moves.length} | 提子 黑:${state.captures.B} 白:${state.captures.W}${view}${last}${ko}`;
 }
 
 function boardMetrics() {
@@ -739,7 +739,7 @@ function drawPassBadge(margin, grid) {
   ctx.font = `${Math.floor(grid * 0.46)}px Segoe UI`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("PASS", x + w / 2, y + h / 2 + 0.5);
+  ctx.fillText("停一手", x + w / 2, y + h / 2 + 0.5);
 }
 
 function drawMoveAnnotations(margin, grid) {
@@ -892,14 +892,14 @@ function renderHeatmapLegend() {
   const stats = state.heatmapStats || getHeatmapStats(source);
   state.heatmapStats = stats;
   if (!stats.hasData) {
-    heatLegendHintEl.textContent = "Run analysis to map color to winrate";
+    heatLegendHintEl.textContent = "请先分析，才能把颜色映射到胜率";
     heatLegendMinEl.textContent = "-";
     heatLegendMidEl.textContent = "-";
     heatLegendMaxEl.textContent = "-";
     return;
   }
   const mid = (stats.minWinrate + stats.maxWinrate) / 2;
-  heatLegendHintEl.textContent = "Relative winrate scale for current position";
+  heatLegendHintEl.textContent = "当前局面的相对胜率刻度";
   heatLegendMinEl.textContent = formatPct(stats.minWinrate);
   heatLegendMidEl.textContent = formatPct(mid);
   heatLegendMaxEl.textContent = formatPct(stats.maxWinrate);
@@ -937,7 +937,7 @@ function renderSuggestions(rootInfo = state.lastRootInfo) {
   movesList.innerHTML = "";
   const items = getRenderedListItems();
   if (!items.length) {
-    summaryEl.textContent = "No candidate move.";
+    summaryEl.textContent = "暂无候选点。";
     return;
   }
 
@@ -950,20 +950,20 @@ function renderSuggestions(rootInfo = state.lastRootInfo) {
       ? Math.min(state.suggestions.length, requestedTopN > 0 ? requestedTopN : defaultTopVariations)
       : items.length;
   const candidateCount = typeof state.candidateCount === "number" ? state.candidateCount : items.length;
-  const listLabel = getListScopeMode() === "all" ? "All" : "Top N";
+  const listLabel = getListScopeMode() === "all" ? "全部候选" : "Top N";
   summaryEl.textContent =
-    `Root winrate: ${formatPct(winrate)} | scoreLead: ${formatNumber(scoreLead)} | scoreSelfplay: ${formatNumber(scoreSelf)} | candidates: ${candidateCount} | showing: ${displayCount} | list: ${listLabel}`;
+    `根节点胜率：${formatPct(winrate)} | 目差：${formatNumber(scoreLead)} | 自博弈目差：${formatNumber(scoreSelf)} | 候选总数：${candidateCount} | 当前展示：${displayCount} | 列表：${listLabel}`;
 
   items.forEach((m) => {
     const li = document.createElement("li");
     const line1 = document.createElement("div");
     line1.className = "move-line";
     line1.textContent =
-      `#${m.rank} ${m.move} | winrate ${formatPct(m.winrate)} | score ${formatNumber(m.scoreLead)} | visits ${m.visits ?? "-"}`;
+      `#${m.rank} ${m.move} | 胜率 ${formatPct(m.winrate)} | 目差 ${formatNumber(m.scoreLead)} | 访问 ${m.visits ?? "-"}`;
     const line2 = document.createElement("div");
     line2.className = "pv-line";
     const pvText = Array.isArray(m.pv) && m.pv.length ? m.pv.join(" ") : "-";
-    line2.textContent = `PV: ${pvText}`;
+    line2.textContent = `变化：${pvText}`;
     li.appendChild(line1);
     li.appendChild(line2);
     movesList.appendChild(li);
@@ -1033,7 +1033,7 @@ function playPass() {
   applyDisplayedMoves(state.recordMoves.slice());
   clearAnalysis();
   if (state.consecutivePasses >= 2) {
-    summaryEl.textContent = "Both players passed. Position is ready for scoring review.";
+    summaryEl.textContent = "双方连续停一手，当前局面可进入数子复盘。";
   }
   updateStatus();
   drawBoard();
@@ -1079,8 +1079,8 @@ async function analyzePosition() {
   const shouldRefine = needAllCandidates || topN > quickTopN;
   const requestSeq = ++analyzeRequestSeq;
   analyzeBtn.disabled = true;
-  analyzeBtn.textContent = "Analyzing...";
-  summaryEl.textContent = "KataGo is thinking...";
+  analyzeBtn.textContent = "分析中...";
+  summaryEl.textContent = "KataGo 正在思考...";
   try {
     const quickData = await postAnalyze({
       moves: state.moves,
@@ -1106,7 +1106,7 @@ async function analyzePosition() {
       return;
     }
 
-    analyzeBtn.textContent = "Refining...";
+    analyzeBtn.textContent = "精算中...";
     const refinePayload = {
       moves: state.moves,
       nextPlayer: state.nextPlayer,
@@ -1130,12 +1130,12 @@ async function analyzePosition() {
     drawBoard();
   } catch (err) {
     if (requestSeq === analyzeRequestSeq) {
-      summaryEl.textContent = `Analyze failed: ${err.message}`;
+      summaryEl.textContent = `分析失败：${err.message}`;
     }
   } finally {
     if (requestSeq === analyzeRequestSeq) {
       analyzeBtn.disabled = false;
-      analyzeBtn.textContent = "Analyze";
+      analyzeBtn.textContent = "分析";
     }
   }
 }
@@ -1279,5 +1279,5 @@ updateStatus();
 drawBoard();
 if (window.location.hostname.endsWith("github.io") && !apiBase) {
   summaryEl.textContent =
-    "Static mode on GitHub Pages: board/SGF features work. Set GEJUBOT_API_BASE to enable Analyze.";
+    "当前为 GitHub Pages 静态模式：可用棋盘与 SGF 功能。设置 GEJUBOT_API_BASE 可启用“分析”。";
 }

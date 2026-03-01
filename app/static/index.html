@@ -1,41 +1,41 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GejuBot</title>
+    <title>GejuBot 围棋分析</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <main class="layout">
       <section class="board-panel">
         <h1>GejuBot</h1>
-        <p class="subtitle">KataGo powered analysis board</p>
-        <canvas id="board" width="760" height="760" aria-label="go board"></canvas>
+        <p class="subtitle">基于 KataGo 的围棋分析棋盘</p>
+        <canvas id="board" width="760" height="760" aria-label="围棋棋盘"></canvas>
         <div class="toolbar">
-          <button id="analyzeBtn" type="button">Analyze</button>
-          <button id="exportSgfBtn" type="button">Export SGF</button>
-          <button id="importSgfBtn" type="button">Import SGF</button>
+          <button id="analyzeBtn" type="button">分析</button>
+          <button id="exportSgfBtn" type="button">导出 SGF</button>
+          <button id="importSgfBtn" type="button">导入 SGF</button>
           <button id="toStartBtn" type="button">|&lt;</button>
           <button id="back5Btn" type="button">-5</button>
           <button id="prevBtn" type="button">&lt;</button>
           <button id="nextBtn" type="button">&gt;</button>
           <button id="forward5Btn" type="button">+5</button>
           <button id="toEndBtn" type="button">&gt;|</button>
-          <button id="passBtn" type="button">Pass</button>
-          <button id="undoBtn" type="button">Undo</button>
-          <button id="resetBtn" type="button">Reset</button>
+          <button id="passBtn" type="button">停一手</button>
+          <button id="undoBtn" type="button">悔棋</button>
+          <button id="resetBtn" type="button">重置</button>
           <label class="visits">
-            Move Labels
+            手数标记
             <select id="moveLabelMode">
-              <option value="all">All</option>
-              <option value="last5">Last 5</option>
-              <option value="current">Current</option>
-              <option value="lastMarker">Last Marker</option>
+              <option value="all">全部</option>
+              <option value="last5">最近 5 手</option>
+              <option value="current">当前手</option>
+              <option value="lastMarker">仅最后标记</option>
             </select>
           </label>
           <label class="visits">
-            Max Visits
+            最大访问数
             <input id="visitsInput" type="number" value="120" min="1" max="10000" />
           </label>
           <label class="visits">
@@ -43,17 +43,17 @@
             <input id="topNInput" type="number" value="10" min="1" max="400" />
           </label>
           <label class="visits">
-            Board Overlay
+            棋盘叠加
             <select id="boardOverlayMode">
-              <option value="off">Off</option>
-              <option value="allHeatmap">All Points Heatmap</option>
+              <option value="off">关闭</option>
+              <option value="allHeatmap">全点热力图</option>
             </select>
           </label>
           <label class="visits">
-            List Scope
+            列表范围
             <select id="listScopeMode">
               <option value="topN">Top N</option>
-              <option value="all">All Candidates</option>
+              <option value="all">全部候选</option>
             </select>
           </label>
           <input id="sgfInput" type="file" accept=".sgf" hidden />
@@ -61,12 +61,12 @@
       </section>
 
       <aside class="info-panel">
-        <h2>Position</h2>
-        <p id="status">Turn: Black</p>
-        <p id="summary">No analysis yet.</p>
+        <h2>局面信息</h2>
+        <p id="status">轮到：黑</p>
+        <p id="summary">尚未分析。</p>
         <section id="heatLegend" class="heat-legend" hidden>
-          <h3>Heatmap Legend</h3>
-          <p id="heatLegendHint">Relative winrate scale for current position</p>
+          <h3>热力图图例</h3>
+          <p id="heatLegendHint">当前局面的相对胜率刻度</p>
           <div class="legend-bar" aria-hidden="true"></div>
           <div class="legend-scale">
             <span id="heatLegendMin">-</span>
@@ -74,12 +74,12 @@
             <span id="heatLegendMax">-</span>
           </div>
           <div class="legend-notes">
-            <span>Lower</span>
-            <span>Higher</span>
+            <span>较低</span>
+            <span>较高</span>
           </div>
         </section>
 
-        <h2>Top Variations</h2>
+        <h2>候选变化</h2>
         <ol id="movesList"></ol>
       </aside>
     </main>
