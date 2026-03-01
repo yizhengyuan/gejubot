@@ -57,6 +57,25 @@ python app\server.py
 
 `http://127.0.0.1:8080`
 
+## GitHub Pages (Static Demo)
+
+This repo includes a static site under `docs/` for GitHub Pages.
+
+- Works on Pages: board interaction, rules, SGF import/export, move browsing.
+- Not available on Pages by default: KataGo `Analyze` (needs external backend API).
+
+### Enable Analyze on Pages
+
+Edit `docs/index.html` and set:
+
+```html
+<script>
+  window.GEJUBOT_API_BASE = "https://your-backend.example.com";
+</script>
+```
+
+Your backend must expose `POST /api/analyze` and allow CORS from your Pages domain.
+
 ## API
 
 - `GET /api/health`
