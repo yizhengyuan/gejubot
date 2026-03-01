@@ -33,7 +33,7 @@ Minimal Go application powered by KataGo analysis.
 ## Requirements
 
 - Python 3.9+
-- KataGo binary
+- KataGo binary (must match your OS; this repo currently bundles a Windows build)
 - KataGo model file (`.bin.gz`)
 - KataGo config file (from KataGo release package)
 

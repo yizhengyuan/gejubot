@@ -7,6 +7,7 @@ from collections import OrderedDict
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Optional
 
 
 def require_env(name: str) -> str:
@@ -78,7 +79,7 @@ _analysis_cache: "OrderedDict[str, dict]" = OrderedDict()
 _analysis_cache_lock = threading.Lock()
 
 
-def _cache_get(key: str) -> dict | None:
+def _cache_get(key: str) -> Optional[dict]:
     with _analysis_cache_lock:
         value = _analysis_cache.get(key)
         if value is None:
@@ -99,7 +100,7 @@ def _cache_set(key: str, value: dict) -> None:
 def _build_cache_key(
     *,
     moves: list[list[str]],
-    max_visits: int | None,
+    max_visits: Optional[int],
     top_n: int,
     pv_length: int,
     candidate_moves: list[str],
@@ -175,10 +176,10 @@ class KataGoEngine:
     def analyze(
         self,
         moves: list[list[str]],
-        max_visits: int | None = None,
-        max_moves_to_analyze: int | None = None,
-        analysis_pv_len: int | None = None,
-        allow_moves: dict | None = None,
+        max_visits: Optional[int] = None,
+        max_moves_to_analyze: Optional[int] = None,
+        analysis_pv_len: Optional[int] = None,
+        allow_moves: Optional[dict] = None,
     ) -> dict:
         if self.proc.poll() is not None:
             raise RuntimeError("KataGo process is not running")
@@ -234,7 +235,7 @@ class KataGoEngine:
 
 
 class AppHandler(SimpleHTTPRequestHandler):
-    engine: KataGoEngine | None = None
+    engine: Optional[KataGoEngine] = None
 
     def do_GET(self) -> None:
         if self.path == "/api/health":
