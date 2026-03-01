@@ -119,6 +119,12 @@ Edit `docs/index.html` and set:
 
 Your backend must expose `POST /api/analyze` and allow CORS from your Pages domain.
 
+Recommended backend env:
+
+```dotenv
+CORS_ALLOW_ORIGINS=https://yizhengyuan.github.io,http://127.0.0.1:8080,http://localhost:8080
+```
+
 ## API
 
 - `GET /api/health`

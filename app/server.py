@@ -74,6 +74,18 @@ def chunked(items: list[str], size: int) -> list[list[str]]:
     return [items[i : i + size] for i in range(0, len(items), size)]
 
 
+def parse_cors_allowed_origins(value: Optional[str]) -> list[str]:
+    if value is None:
+        # Default allowlist for local dev + current GitHub Pages host.
+        return [
+            "https://yizhengyuan.github.io",
+            "http://127.0.0.1:8080",
+            "http://localhost:8080",
+        ]
+    items = [item.strip() for item in value.split(",") if item.strip()]
+    return items or ["https://yizhengyuan.github.io"]
+
+
 _CACHE_MAX_ENTRIES = 64
 _analysis_cache: "OrderedDict[str, dict]" = OrderedDict()
 _analysis_cache_lock = threading.Lock()
@@ -236,6 +248,7 @@ class KataGoEngine:
 
 class AppHandler(SimpleHTTPRequestHandler):
     engine: Optional[KataGoEngine] = None
+    cors_allowed_origins: list[str] = []
 
     def do_GET(self) -> None:
         if self.path == "/api/health":
@@ -244,6 +257,19 @@ class AppHandler(SimpleHTTPRequestHandler):
         if self.path == "/":
             self.path = "/index.html"
         return super().do_GET()
+
+    def do_OPTIONS(self) -> None:
+        if not self.path.startswith("/api/"):
+            self.send_response(HTTPStatus.NOT_FOUND)
+            self.end_headers()
+            return
+        self.send_response(HTTPStatus.NO_CONTENT)
+        self._write_cors_headers()
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self) -> None:
         if self.path != "/api/analyze":
@@ -441,10 +467,22 @@ class AppHandler(SimpleHTTPRequestHandler):
     def _write_json(self, payload: dict, status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(payload, ensure_ascii=True).encode("utf-8")
         self.send_response(status)
+        self._write_cors_headers()
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _write_cors_headers(self) -> None:
+        origin = self.headers.get("Origin")
+        allow_origin = None
+        if "*" in self.cors_allowed_origins:
+            allow_origin = "*"
+        elif origin and origin in self.cors_allowed_origins:
+            allow_origin = origin
+        if allow_origin:
+            self.send_header("Access-Control-Allow-Origin", allow_origin)
+        self.send_header("Vary", "Origin")
 
 
 def main() -> None:
@@ -463,6 +501,7 @@ def main() -> None:
     komi = float(os.getenv("KOMI", "7.5"))
     default_visits = int(os.getenv("DEFAULT_VISITS", "120"))
     port = int(os.getenv("PORT", "8080"))
+    cors_allowed_origins = parse_cors_allowed_origins(os.getenv("CORS_ALLOW_ORIGINS"))
 
     engine = KataGoEngine(
         binary_path=binary_path,
@@ -474,6 +513,7 @@ def main() -> None:
         default_visits=default_visits,
     )
     AppHandler.engine = engine
+    AppHandler.cors_allowed_origins = cors_allowed_origins
 
     handler = lambda *args, **kwargs: AppHandler(*args, directory=str(static_dir), **kwargs)
     server = ThreadingHTTPServer(("127.0.0.1", port), handler)
