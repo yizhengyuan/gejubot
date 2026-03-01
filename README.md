@@ -57,6 +57,48 @@ python app\server.py
 
 `http://127.0.0.1:8080`
 
+## Automation (Recommended)
+
+### 1) One-command background service (macOS/Linux shell)
+
+1. Create `.env`:
+
+```bash
+cp .env.example .env
+```
+
+2. Fill required paths in `.env`:
+
+```dotenv
+KATAGO_BINARY=/absolute/path/to/katago
+KATAGO_MODEL=/absolute/path/to/model.bin.gz
+KATAGO_CONFIG=/absolute/path/to/analysis_example.cfg
+PORT=8080
+```
+
+3. Manage backend with one command:
+
+```bash
+./scripts/gejubotd.sh start
+./scripts/gejubotd.sh status
+./scripts/gejubotd.sh logs
+./scripts/gejubotd.sh stop
+```
+
+### 2) Auto-start at login (macOS launchd)
+
+Install and start:
+
+```bash
+./scripts/install-launchd.sh
+```
+
+Uninstall:
+
+```bash
+./scripts/uninstall-launchd.sh
+```
+
 ## GitHub Pages (Static Demo)
 
 This repo includes a static site under `docs/` for GitHub Pages.
